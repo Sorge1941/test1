@@ -1,11 +1,13 @@
 package com.itluchao.reggie.controller;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,6 +44,8 @@ public class DishController {
     @Autowired
     CategoryService categoryService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
     // 查询菜品
     @GetMapping("/page")
     public R<Page> getDish(HttpServletRequest request, Integer page, Integer pageSize, String name) {
@@ -83,6 +87,9 @@ public class DishController {
     public R<String> AddDish(@RequestBody DishDto dishDto) {
         // 怎么？？
         dishService.AddDish(dishDto);
+        //清理缓存数据
+        String key="dish_"+dishDto.getCategoryId()+"_1";
+        redisTemplate.delete(key);
         return R.success("新增成功");
     }
 
@@ -111,6 +118,9 @@ public class DishController {
     public R<String> updateDish(@RequestBody DishDto dishDto) {
         // 修改
         dishService.updateDish(dishDto);
+        //清理缓存数据
+        String key="dish_"+dishDto.getCategoryId()+"_1";
+        redisTemplate.delete(key);
 
         return R.success("修改成功");
     }
@@ -134,6 +144,15 @@ public class DishController {
     // 返回套餐菜品
     @GetMapping("/list")
     public R<List<DishDto>> fanhui(Dish dish){
+        List<DishDto> dto=null;
+        //设置key
+        String key="dish_"+dish.getCategoryId()+"_"+dish.getStatus();
+
+        //从redis获取数据
+        dto=  (List<DishDto>) redisTemplate.opsForValue().get(key);
+        if(dto!=null){//取到数据，不用查数据库
+            return R.success(dto);
+        } 
         //编辑查询条件
         QueryWrapper<Dish> queryWrapper=new QueryWrapper<Dish>();
         if(dish.getCategoryId()!=0)
@@ -144,7 +163,7 @@ public class DishController {
         //查询返回为列表,不能用DishDto直接查
         List<Dish> list=dishService.list(queryWrapper);
         //创建一个List<dto>
-        List<DishDto> dto= list.stream().map(item->{
+        dto= list.stream().map(item->{
             DishDto dishDto=new DishDto();
             //复制一下
             BeanUtils.copyProperties(item,dishDto);
@@ -157,6 +176,9 @@ public class DishController {
             dishDto.setFlavors(flavors);
             return dishDto;
         }).collect(Collectors.toList());
+        //第一次查询赋值
+        redisTemplate.opsForValue().set(key,dto,60,TimeUnit.MINUTES);
+
 
         return R.success(dto);
     }

@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequestMapping("/common")
 public class CommonController {
    
-    private String path="T:\\A\\瑞吉外卖-资料\\1 瑞吉外卖项目\\资料\\图片资源\\";
+    private String path="T:\\A\\Reggie\\1 瑞吉外卖项目\\资料\\图片资源\\";
     @PostMapping("/upload")
     public R<String> upload(MultipartFile file) throws IllegalStateException, IOException{
         //获取原始文件名后缀
