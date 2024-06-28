@@ -136,4 +136,21 @@ public class SetmealController {
 
     }
 
-}
+    //返回查询
+    @GetMapping("/list")
+    public R<List<Setmeal>> list(Setmeal setmeal){
+        QueryWrapper<Setmeal> queryWrapper=new QueryWrapper<Setmeal>();
+        queryWrapper.eq("category_id",setmeal.getCategoryId());
+        queryWrapper.eq("status",1);
+
+        List<Setmeal> list=setmealService.list(queryWrapper);
+        //steaml里的id没赋值
+
+
+        return R.success(list);
+    }
+    }
+    
+
+
+
