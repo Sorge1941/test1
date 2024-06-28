@@ -17,11 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.JsonSerializable.Base;
 import com.itluchao.reggie.dto.DishDto;
 import com.itluchao.reggie.entity.Category;
 import com.itluchao.reggie.entity.Dish;
 import com.itluchao.reggie.entity.DishFlavor;
 import com.itluchao.reggie.entity.R;
+import com.itluchao.reggie.exception.BaseContext;
 import com.itluchao.reggie.service.CategoryService;
 import com.itluchao.reggie.service.DishFlavorService;
 import com.itluchao.reggie.service.DishService;
@@ -129,9 +131,20 @@ public class DishController {
     }
 
     // 起售和停售
+    //清除缓存
     @PostMapping("status/{status}")
-    public R<String> start(@PathVariable Integer status, @RequestParam long ids) {
-        dishService.stop(status, ids);
+    @CacheEvict(value = "dishCache",allEntries = true)
+    public R<String> start(HttpServletRequest request, @PathVariable Integer status, @RequestParam long[] ids) {
+
+        BaseContext.setCurrentId((Long) request.getSession().getAttribute("employee"));
+        //更新
+        for (long id : ids) {
+            Dish dish = new Dish();
+            dish.setId(id);
+            dish.setStatus(status);
+          
+            dishService.updateById(dish);
+        }
         return R.success("成功");
 
     }
@@ -149,15 +162,18 @@ public class DishController {
     @GetMapping("/list")
     @Cacheable(value = "dishCache" ,key = "#dish.categoryId+'_'+#dish.status")
     public R<List<DishDto>> fanhui(Dish dish){
-        List<DishDto> dto=null;
-       /*  //设置key
-        String key="dish_"+dish.getCategoryId()+"_"+dish.getStatus();
+        List<DishDto> dto=null; 
+       /*      //先看redis里有没有
+            String key="dish_"+dish.getCategoryId()+"_"+dish.getStatus();
+            dto=(List<DishDto>)redisTemplate.opsForValue().get(key);
+            if(dto!=null)
+            {
+                return R.success(dto);
+            }  */
 
-        //从redis获取数据
-        dto=  (List<DishDto>) redisTemplate.opsForValue().get(key);
-        if(dto!=null){//取到数据，不用查数据库
-            return R.success(dto);
-        }  */
+
+
+
         //编辑查询条件
         QueryWrapper<Dish> queryWrapper=new QueryWrapper<Dish>();
         if(dish.getCategoryId()!=0)
@@ -182,7 +198,8 @@ public class DishController {
             return dishDto;
         }).collect(Collectors.toList());
         //第一次查询赋值
-      //  redisTemplate.opsForValue().set(key,dto,60,TimeUnit.MINUTES);
+        
+        //redisTemplate.opsForValue().set(key,dto,5,TimeUnit.MINUTES);
 
 
         return R.success(dto);

@@ -15,7 +15,7 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebFilter("/*") // 对所有请求进行拦截
+//@WebFilter("/*") // 对所有请求进行拦截
 public class LoginCheckFilter implements Filter {
     // 对没有登录的进行拦截
     @Override

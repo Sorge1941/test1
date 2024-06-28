@@ -13,6 +13,8 @@ import com.itluchao.reggie.service.CategoryService;
 import com.itluchao.reggie.service.DishService;
 import com.itluchao.reggie.service.ShoppingCartService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +33,9 @@ public class ShoppingCartController {
 
     //查询购物车
     @GetMapping("/list")
-    public R<List<ShoppingCart>> list(){
+    public R<List<ShoppingCart>> list(HttpServletRequest request){
         QueryWrapper<ShoppingCart> queryWrapper=new QueryWrapper<ShoppingCart>();
-        queryWrapper.eq("user_id",BaseContext.getCurrentId());
+        queryWrapper.eq("user_id",(Long)request.getSession().getAttribute("user"));
         queryWrapper.orderByAsc("create_time");
         
         List<ShoppingCart> list=shoppingCartService.list(queryWrapper);
@@ -43,9 +45,9 @@ public class ShoppingCartController {
     
     //添加到购物车
     @PostMapping("/add")
-    public R<ShoppingCart> add(@RequestBody ShoppingCart shoppingCart){
+    public R<ShoppingCart> add( HttpServletRequest request, @RequestBody ShoppingCart shoppingCart){
         //设置id，是哪个用户的
-        Long userid=BaseContext.getCurrentId();//获得session里的
+        Long userid=(Long) request.getSession().getAttribute("user");//获得session里的
         shoppingCart.setUserId(userid);
         //判断购物车里有没有
         //有+1
@@ -85,9 +87,9 @@ public class ShoppingCartController {
 
     //删除购物车
     @PostMapping("/sub")
-    public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart){
+    public R<ShoppingCart> sub(HttpServletRequest request, @RequestBody ShoppingCart shoppingCart){
         //设置id，是哪个用户的
-        Long userid=BaseContext.getCurrentId();//获得session里的
+        Long userid=(Long) request.getSession().getAttribute("user");//获得session里的
         shoppingCart.setUserId(userid);
         //判断购物车里有没有
         //有1个，直接删除，大于1个就减1
@@ -125,8 +127,8 @@ public class ShoppingCartController {
 
     //clean
     @DeleteMapping("/clean")
-    public R<String> clean(){
-        Long id=BaseContext.getCurrentId();
+    public R<String> clean(HttpServletRequest request){
+        Long id=(Long) request.getSession().getAttribute("user");
         QueryWrapper<ShoppingCart> queryWrapper=new QueryWrapper<ShoppingCart>();
         queryWrapper.eq("user_id",id);
         //根据id删除
