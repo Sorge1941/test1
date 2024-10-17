@@ -38,8 +38,6 @@ public class UserController {
             user.setStatus(1);
             userService.save(user);
             //存入session
-            
-            
         }
         request.getSession().setAttribute("user",user.getId());
         return R.success("登陆成功");

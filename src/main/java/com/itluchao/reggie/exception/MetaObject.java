@@ -9,7 +9,7 @@ import org.springframework.cglib.core.Local;
  public class MetaObject implements MetaObjectHandler{
      //插入时的方法
      @Override
-     public void insertFill(org.apache.ibatis.reflection.MetaObject metaObject) {
+     public void insertFill( org.apache.ibatis.reflection.MetaObject metaObject) {
         metaObject.setValue("createTime",LocalDateTime.now());
         metaObject.setValue("updateTime",LocalDateTime.now());
         metaObject.setValue("createUser",BaseContext.getCurrentId());
@@ -19,7 +19,7 @@ import org.springframework.cglib.core.Local;
      @Override
      public void updateFill(org.apache.ibatis.reflection.MetaObject metaObject) {
          // TODO Auto-generated method stub
-         metaObject.setValue("updateTime",LocalDateTime.now());
-         metaObject.setValue("updateUser",BaseContext.getCurrentId());
+            metaObject.setValue("updateTime",LocalDateTime.now());
+            metaObject.setValue("updateUser",BaseContext.getCurrentId());
      }
  }
